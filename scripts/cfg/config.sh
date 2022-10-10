@@ -7,6 +7,8 @@
 # This source code is licensed under the MIT license.
 #
 #####################################################################
+# General
+LOG_LEVEL=INFO
 # Container
 container_name=my_container
 # Image
@@ -16,7 +18,6 @@ image_version=latest
 build_file_path=./Dockerfile
 build_cleanup_old_images=true
 # Start
-start_parameters=
-start_cleanup_old_containers=true
+start_cleanup_old_containers=false
 start_cleanup_container_same_name=true
 

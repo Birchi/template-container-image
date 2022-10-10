@@ -30,7 +30,7 @@ EOF
 
 function parse_cmd_args() {
     args=$(getopt --options n:v: \
-                  --longoptions name:,version: -- "$1")
+                  --longoptions name:,version: -- "$@")
     
     if [[ $? -ne 0 ]]; then
         echo "Failed to parse arguments!" && usage
@@ -54,7 +54,7 @@ function parse_cmd_args() {
 ##
 container_engine=$(detect_container_engine)
 
-parse_cmd_args ${@}
+parse_cmd_args "$@"
 
 # Clean up containers
 image_ids=$(get_image_id_by_image_name $image_name $image_version)
@@ -75,7 +75,7 @@ if [ "${image_ids}" != "" ] ; then
                     log DEBUG "Removed container ${container_id}"
                 } || error "Cannot delete container ${container_id}"
             done
-            log INFO "Removed containers, which use the image ${image_id}"
+            log DEBUG "Removed containers, which use the image ${image_id}"
         fi
         image_names=$(get_image_names_by_image_id ${image_id})
         if [ "${image_names}" != "" ] ; then
@@ -87,7 +87,7 @@ if [ "${image_ids}" != "" ] ; then
                     log DEBUG "Removed image ${image_full_name}"
                 } || error "Cannot remove image ${image_full_name}"
             done
-            log INFO "Removed old images with id ${image_id}"
+            log DEBUG "Removed old images with id ${image_id}"
         fi
     done
 fi

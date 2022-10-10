@@ -15,13 +15,24 @@ function detect_os() {
     echo ${os}
 }
 
+function get_log_level() {
+    case $1 in
+        ERROR) echo 1 ;;
+        WARN) echo 2 ;;
+        INFO) echo 3 ;;
+        DEBUG) echo 4 ;;
+    esac
+}
+
 function log() {
     log_level=${1}
     log_message=$2
-    if [[ "$(detect_os)" == "MacOS" ]] ; then
-        echo -e "$(date +"%Y-%m-%d %H:%M:%S") ${log_level}\t $log_message"
-    else
-        echo -e "$(date +"%Y-%m-%d %H:%M:%S.%3N") ${log_level}\t $log_message"
+    if [[ $(get_log_level ${LOG_LEVEL:-INFO}) -ge $(get_log_level $log_level) ]] ; then
+        if [[ "$(detect_os)" == "MacOS" ]] ; then
+            echo -e "$(date +"%Y-%m-%d %H:%M:%S") ${log_level}\t $log_message"
+        else
+            echo -e "$(date +"%Y-%m-%d %H:%M:%S.%3N") ${log_level}\t $log_message"
+        fi
     fi
 }
 
@@ -56,4 +67,18 @@ function get_image_names_by_image_id () {
 
 function get_containers_by_image_id () {
     $(detect_container_engine) container ls -a --filter "ancestor=$1" -q
+}
+
+function does_container_exist() {
+    if $(detect_container_engine) container inspect $1 >/dev/null 2>&1; then
+        echo true
+    else
+        echo false
+    fi
+}
+
+function get_container_id_by_name () {
+    if $(does_container_exist $1) ; then
+        $(detect_container_engine) container inspect -f {{.ID}} $1
+    fi
 }

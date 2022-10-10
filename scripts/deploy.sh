@@ -24,6 +24,7 @@ Parameters:
   --registry                Specifies the container registry.
   --registry-username       Specifies the username of the registry.
   --registry-password       Specifies the password of the registry.
+  --registry-tls-verify     Enables the tls verification. Default value is true.
 
 Examples:
   $(dirname $0)/deploy.sh -n ${image_name} -v ${image_version} --registry my.registry.com --registry-username username --registry-password password
@@ -33,7 +34,7 @@ EOF
 
 function parse_cmd_args() {
     args=$(getopt --options hn:v: \
-                  --longoptions help,name:,version:,registry:,registry-username:,registry-password: -- "$1")
+                  --longoptions help,name:,version:,registry:,registry-username:,registry-password:,registry-tls-verify: -- "$@")
     
     if [[ $? -ne 0 ]]; then
         echo "Failed to parse arguments!" && usage
@@ -62,8 +63,9 @@ container_engine=$(detect_container_engine)
 container_registry=
 container_registry_username=
 container_registry_password=
+container_registry_tls_verify=true
 
-parse_cmd_args ${@}
+parse_cmd_args "$@"
 
 if [ "${container_registry}" == "" ] ; then
     validation_error "Please, set the container registry via '--registry my.registry.com'"
@@ -74,7 +76,9 @@ if [ "$(get_image_id_by_image_name $image_name $image_version)" == "" ] ; then
 fi
 
 if [ "${container_registry_username}" != "" ] && [ "${container_registry_password}" != "" ] ; then
-    ${container_engine} login --username ${container_registry_username} --password ${container_registry_password} ${container_registry}
+    ${container_engine} login --username ${container_registry_username} \
+                              --password ${container_registry_password} \
+                              --tls-verify ${container_registry_tls_verify} ${container_registry}
 fi
 
 ${container_engine} tag ${image_name}:${image_version} ${container_registry}/${image_name}:${image_version}

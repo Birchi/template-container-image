@@ -32,7 +32,7 @@ EOF
 
 function parse_cmd_args() {
     args=$(getopt --options n:v: \
-                  --longoptions name:,version:,start-params -- "$1")
+                  --longoptions name:,version:,start-params -- "$@")
     
     if [[ $? -ne 0 ]]; then
         echo "Failed to parse arguments!" && usage
@@ -58,9 +58,9 @@ function parse_cmd_args() {
 ##
 container_engine=$(detect_container_engine)
 
-parse_cmd_args ${@}
+parse_cmd_args "$@"
 
-if [ ${start_cleanup_old_containers} ] ; then
+if ${start_cleanup_old_containers} ; then
     container_ids=$(${container_engine} container ls -a | grep "${image_name}:${image_version}" | awk '{print $1}')
     if [ "${container_ids}" != "" ] ; then
         log INFO "Removing containers, which use the image ${image_name}:${image_version}"
@@ -76,14 +76,26 @@ if [ ${start_cleanup_old_containers} ] ; then
                 log DEBUG "Removed container ${container_id}"
             } || log ERROR "Cannot delete container ${container_id}"
         done
-        log INFO "Removed containers, which use the image ${image_name}:${image_version}"
+        log DEBUG "Removed containers, which use the image ${image_name}:${image_version}"
     fi
 fi
 
-if [ ${start_cleanup_container_same_name} ] ; then
-    if [ "${start_parameters}" != "" ] ; then
-        ${container_engine} run --name ${container_name} ${start_parameters} ${image_name}:${image_version}
-    else
-        ${container_engine} run --name ${container_name} ${image_name}:${image_version}
+if ${start_cleanup_container_same_name} ; then
+    container_id=$(get_container_id_by_name ${container_name})
+    if [ "$container_id" != "" ] ; then
+        log INFO "Removing container ${container_name} to prevent error during the start."
+        {
+            log DEBUG "Stopping container ${container_id}"
+            ${container_engine} container stop ${container_id} 1> /dev/null
+            log DEBUG "Stopped container ${container_id}"
+        } || log ERROR "Cannot stop container ${container_id}"
+        {
+            log DEBUG "Removing container ${container_id}"
+            ${container_engine} container rm ${container_id} 1> /dev/null
+            log DEBUG "Removed container ${container_id}"
+        } || log ERROR "Cannot delete container ${container_id}"
+        log DEBUG "Removed container to prevent start from failing."
     fi
 fi
+
+${container_engine} run --name ${container_name} ${image_name}:${image_version}
