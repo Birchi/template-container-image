@@ -97,5 +97,8 @@ if ${start_cleanup_container_same_name} ; then
         log DEBUG "Removed container to prevent start from failing."
     fi
 fi
-
-${container_engine} run --name ${container_name} ${image_name}:${image_version}
+{
+    log INFO "Starting container ${container_name} with image ${image_name}:${image_version}."
+    container_hash=$(${container_engine} run -dit --name ${container_name} ${image_name}:${image_version})
+    log INFO "Started container ${container_name} with hash '${container_hash}'."
+} || error "Failed to start container ${container_name}"

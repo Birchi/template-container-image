@@ -11,6 +11,8 @@
 LOG_LEVEL=INFO
 # Container
 container_name=my_container
+container_workdir=/
+container_shell=/bin/bash
 # Image
 image_name=my_image
 image_version=latest
