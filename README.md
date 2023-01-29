@@ -17,3 +17,7 @@
 ```
 ./scripts/start.sh --name my_container --image my_image --version latest
 ```
+### Enter
+```
+./scripts/enter.sh --name my_container --workdir / --shell /bin/bash
+```
